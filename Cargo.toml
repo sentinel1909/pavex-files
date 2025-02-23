@@ -1,0 +1,17 @@
+[workspace]
+members = ["app", "server_sdk", "server", "workspace_hack"]
+# By setting `server` as the default member, `cargo run` will default to running the server binary
+# when executed from the root of the workspace.
+# Otherwise, you would have to use `cargo run --bin server` to run the server binary.
+default-members = ["server"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+description = "A proof of concept for adding static file serving capability to a Pavex project"
+authors = ["Jeffery D. Mitchell", "<sentinel1909@jeff-mitchell.dev>"]
+readme = "README.md"
+repository = "https://github.com/sentinel1909/pavex-files.git"
+license = "MIT"
+publish = false

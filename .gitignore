@@ -1,0 +1,10 @@
+# gitignore configuration for the pavex-files repo
+
+# VS Code Settings
+.vscode
+
+# Environment Variables
+.env
+
+# Build Artifacts
+/target
