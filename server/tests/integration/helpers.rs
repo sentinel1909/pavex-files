@@ -73,4 +73,12 @@ impl TestApi {
             .await
             .expect("Failed to execute request.")
     }
+
+    pub async fn get_static_asset(&self, filename: &str) -> reqwest::Response {
+        self.api_client
+            .get(format!("{}/public_html/{}", &self.api_address, filename))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
 }

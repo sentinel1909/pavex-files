@@ -29,3 +29,4 @@ tracing = "0.1"
 tracing_log_error = "0.1"
 serde = { version = "1", features = ["derive"] }
 workspace_hack = { path = "../workspace_hack" }
+mime_guess = "2.0.5"
