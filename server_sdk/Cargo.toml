@@ -16,7 +16,7 @@ verifier_args = ["--check"]
 clippy = { all = "allow" }
 
 [dependencies]
-app = { version = "0.2.1", path = "../app", default-features = false }
+app = { version = "0.3.0", path = "../app", default-features = false }
 http = { version = "1.2.0", default-features = false }
 hyper = { version = "1.6.0", default-features = false }
 matchit = { version = "0.8.6", default-features = false }

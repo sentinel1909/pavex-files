@@ -43,7 +43,7 @@ impl Router {
     fn router() -> matchit::Router<u32> {
         let mut router = matchit::Router::new();
         router.insert("/api/ping", 0u32).unwrap();
-        router.insert("/public_html/{*filename}", 1u32).unwrap();
+        router.insert("/public_html/{filename}", 1u32).unwrap();
         router
     }
     pub async fn route(
@@ -100,7 +100,7 @@ impl Router {
                 match &request_head.method {
                     &pavex::http::Method::GET => {
                         let matched_route_template = pavex::request::path::MatchedPathPattern::new(
-                            "/public_html/{*filename}",
+                            "/public_html/{filename}",
                         );
                         route_0::entrypoint(matched_route_template, &request_head).await
                     }
@@ -110,7 +110,7 @@ impl Router {
                             ])
                             .into();
                         let matched_route_template = pavex::request::path::MatchedPathPattern::new(
-                            "/public_html/{*filename}",
+                            "/public_html/{filename}",
                         );
                         route_2::entrypoint(
                                 &request_head,

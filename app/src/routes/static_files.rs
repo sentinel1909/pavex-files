@@ -15,7 +15,7 @@ impl TypedBody for StaticFile {
     type Body = Full<Bytes>;
 
     fn content_type(&self) -> HeaderValue {
-        self.get_header_value()
+        self.get_asset_header_value()
     }
 
     fn body(self) -> Self::Body {
