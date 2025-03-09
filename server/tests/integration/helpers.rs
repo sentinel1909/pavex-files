@@ -1,6 +1,7 @@
 use pavex::server::Server;
 use server::configuration::{ApplicationProfile, Config};
 use server_sdk::{build_application_state, run};
+use std::borrow::Cow;
 use std::sync::Once;
 use tracing::subscriber::set_global_default;
 use tracing_subscriber::EnvFilter;
@@ -13,8 +14,9 @@ pub struct TestApi {
 impl TestApi {
     pub async fn spawn() -> Self {
         Self::init_telemetry();
-        let config = Self::get_config();
-        let application_state = build_application_state().await;
+        let mut config = Self::get_config();
+        config.app.static_files.dir = Cow::Owned("../public_html".to_string());
+        let application_state = build_application_state(config.app).await;
         let tcp_listener = config
             .server
             .listener()

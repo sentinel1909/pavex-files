@@ -1,15 +1,15 @@
 // app/arc/static_files.rs
 
 // dependencies
+use crate::configuration::AppConfig;
 use mime_guess::from_path;
 use pavex::http::HeaderValue;
 use pavex::request::RequestHead;
 use pavex::response::Response;
 use std::borrow::Cow;
-use std::env::current_dir;
-use std::fs::File;
-use std::io::{Error, ErrorKind, Read};
-use std::path::{Component::Normal, Path, PathBuf};
+use std::path::{Path, PathBuf};
+use tokio::fs::read;
+use tokio::io::Error;
 
 // struct type to represent a static asset, CCSS, JS, an image, or anything else
 #[derive(Debug, Clone)]
@@ -20,54 +20,26 @@ pub struct StaticFile {
 
 // error handler for the StaticFile::new() method
 pub async fn io_error2response(e: &pavex::Error) -> Response {
-    Response::internal_server_error().set_typed_body(e.to_string())
-}
-
-// helper function to construct a path within the allowed directory
-fn safe_join_paths(base_dir: &Path, requested_path: &str) -> Result<PathBuf, Error> {
-
-    let requested_path_buf = Path::new(requested_path).components()
-        .fold(PathBuf::new(), |mut path, component| {
-            if let Normal(c) = component { path.push(c) };
-            path
-        });
-
-        let full_path = base_dir.join(requested_path_buf);
-
-        if full_path.exists() {
-            let canonical_base = base_dir.canonicalize()?;
-            let canonical_path = full_path.canonicalize()?;
-
-            if !canonical_path.starts_with(&canonical_base) {
-                return Err(Error::new(
-                    ErrorKind::PermissionDenied,
-                    "Access to file outsided of allowed directory is not allowed",
-                ));
-            }
-        };
-
-        Ok(full_path)
+    Response::not_found().set_typed_body(e.to_string())
 }
 
 // methods for the StaticAsset type
 impl StaticFile {
-    pub async fn new(request_head: &RequestHead) -> Result<Self, Error> {
-        let base_dir = current_dir()?;
-        
-        let path = request_head.target.path().trim_start_matches('/');
+    pub async fn new(config: &AppConfig, request_head: &RequestHead) -> Result<Self, Error> {
+        let assets_subdir = Path::new(config.static_files.dir.as_ref());
 
-        if path.contains("..") {
-            return Err(Error::new(
-                ErrorKind::PermissionDenied,
-                "Path traversal attempt detected"
-            ));
-        }
+        let request_target = request_head.target.path().trim_start_matches('/');
 
-        let file_path = safe_join_paths(&base_dir, path)?;
+        let filename = Path::new(request_target)
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
 
-        let mut file = File::open(&file_path)?;
-        let mut contents = Vec::new();
-        file.read_to_end(&mut contents)?;
+        let mut file_path = PathBuf::from(assets_subdir);
+        file_path.push(filename);
+
+        let contents: Vec<u8> = read(&file_path).await?;
 
         let mime_type = from_path(&file_path)
             .first_or_octet_stream()

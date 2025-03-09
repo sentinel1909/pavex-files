@@ -35,3 +35,45 @@ async fn static_files_works() {
         );
     }
 }
+
+#[tokio::test]
+async fn non_existent_files_return_404() {
+    let api = TestApi::spawn().await;
+
+    let filename = "shouldntexist.txt";
+    let response = api.get_static_asset(filename).await;
+
+    assert_eq!(
+        response.status(),
+        StatusCode::NOT_FOUND,
+        "Expected 404 status code for non-existent file {}",
+        filename
+    );
+}
+
+#[tokio::test]
+async fn path_traversal_attempts_are_prevented() {
+    let api = TestApi::spawn().await;
+
+    // Attempt to access a file outside of the assets directory
+    let filename = "../secrets.txt";
+    let response = api.get_static_asset(filename).await;
+
+    assert_eq!(
+        response.status(),
+        StatusCode::NOT_FOUND,
+        "Expected 404 status code for path traversal attempt with {}",
+        filename
+    );
+
+    // Another test case to check different levels of path traversal
+    let filename2 = "../../secrets.txt";
+    let response2 = api.get_static_asset(filename2).await;
+
+    assert_eq!(
+        response2.status(),
+        StatusCode::NOT_FOUND,
+        "Expected 404 status code for another path traversal attempt with {}",
+        filename2
+    );
+}
