@@ -10,7 +10,7 @@ pub fn register(bp: &mut Blueprint) {
 /// The configuration object holding all the values required
 /// to configure the application.
 pub struct AppConfig {
-   pub static_files: StaticFilesConfig, 
+    pub static_files: StaticFilesConfig,
 }
 
 // methods for the AppConfig type

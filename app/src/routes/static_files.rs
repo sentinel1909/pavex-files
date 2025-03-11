@@ -3,11 +3,11 @@
 // dependencies
 use crate::static_file::StaticFile;
 use pavex::http::HeaderValue;
-use pavex::response::body::{
-    raw::{Bytes, Full},
-    TypedBody,
-};
 use pavex::response::Response;
+use pavex::response::body::{
+    TypedBody,
+    raw::{Bytes, Full},
+};
 
 // implement the TypedBody trait for the StaticAsset type, so that the the response body
 // can be created

@@ -70,7 +70,8 @@ impl TestApi {
 impl TestApi {
     pub async fn get_ping(&self) -> reqwest::Response {
         self.api_client
-            .get(format!("{}/api/ping", &self.api_address))
+            .get(format!("{}/v1/ping", &self.api_address))
+            .header("Host", "api.pavex-files.local")
             .send()
             .await
             .expect("Failed to execute request.")
@@ -79,6 +80,7 @@ impl TestApi {
     pub async fn get_static_asset(&self, filename: &str) -> reqwest::Response {
         self.api_client
             .get(format!("{}/public_html/{}", &self.api_address, filename))
+            .header("Host", "pavex-files.local")
             .send()
             .await
             .expect("Failed to execute request.")
