@@ -7,7 +7,11 @@ use pavex::http::StatusCode;
 async fn static_files_works() {
     let api = TestApi::spawn().await;
 
-    let test_cases = [("index.html", "text/html"), ("screen.css", "text/css"), ("script.js", "text/javascript")];
+    let test_cases = [
+        ("index.html", "text/html"),
+        ("screen.css", "text/css"),
+        ("script.js", "text/javascript"),
+    ];
 
     for (filename, expected_content_type) in test_cases.iter() {
         let response = api.get_static_asset(filename).await;

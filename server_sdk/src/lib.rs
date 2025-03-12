@@ -486,13 +486,13 @@ pub mod route_2 {
         v1: &pavex_tracing::RootSpan,
         v2: &app::configuration::AppConfig,
     ) -> pavex::response::Response {
-        let v3 = app::static_file::StaticFile::new(v2, v0).await;
+        let v3 = app::serve_file::ServeFile::new(v2, v0).await;
         let v4 = match v3 {
             Ok(ok) => ok,
             Err(v4) => {
                 return {
                     let v5 = pavex::Error::new(v4);
-                    let v6 = app::static_file::io_error2response(&v5).await;
+                    let v6 = app::errors::io_error2response(&v5).await;
                     app::telemetry::error_logger(&v5, v1).await;
                     <pavex::response::Response as pavex::response::IntoResponse>::into_response(
                         v6,
@@ -500,7 +500,7 @@ pub mod route_2 {
                 };
             }
         };
-        let v5 = app::routes::static_files::get(v4);
+        let v5 = app::routes::assets::get(v4);
         <pavex::response::Response as pavex::response::IntoResponse>::into_response(v5)
     }
     async fn post_processing_0(

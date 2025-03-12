@@ -12,8 +12,8 @@ pub fn blueprint() -> Blueprint {
     configuration::register(&mut bp);
 
     routes::register(&mut bp);
-    bp.transient(f!(crate::static_file::StaticFile::new))
+    bp.transient(f!(crate::serve_file::ServeFile::new))
         .clone_if_necessary()
-        .error_handler(f!(crate::static_file::io_error2response));
+        .error_handler(f!(crate::errors::io_error2response));
     bp
 }

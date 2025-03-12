@@ -6,5 +6,8 @@
 # Environment Variables
 .env
 
+# Caddy Configuration File
+Caddyfile
+
 # Build Artifacts
 /target

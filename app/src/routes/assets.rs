@@ -1,7 +1,7 @@
-// src/routes/css_asset.rs
+// src/routes/assets.rs
 
 // dependencies
-use crate::static_file::StaticFile;
+use crate::serve_file::ServeFile;
 use pavex::http::HeaderValue;
 use pavex::response::Response;
 use pavex::response::body::{
@@ -11,19 +11,19 @@ use pavex::response::body::{
 
 // implement the TypedBody trait for the StaticAsset type, so that the the response body
 // can be created
-impl TypedBody for StaticFile {
+impl TypedBody for ServeFile {
     type Body = Full<Bytes>;
 
     fn content_type(&self) -> HeaderValue {
-        self.get_asset_header_value()
+        self.get_serve_file_header_value()
     }
 
     fn body(self) -> Self::Body {
-        Full::new(self.asset_data.into())
+        Full::new(self.contents.into())
     }
 }
 
 // handler function which responds with a 200 OK and the CSS styles
-pub fn get(file: StaticFile) -> Response {
+pub fn get(file: ServeFile) -> Response {
     Response::ok().set_typed_body(file)
 }
