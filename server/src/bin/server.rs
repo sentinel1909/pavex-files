@@ -1,15 +1,19 @@
 use anyhow::Context;
+use pavex::config::ConfigLoader;
 use pavex::server::{Server, ServerHandle, ShutdownMode};
 use server::{
-    configuration::Config,
+    configuration::Profile,
     telemetry::{get_subscriber, init_telemetry},
 };
-use server_sdk::{build_application_state, run};
+use server_sdk::{run, ApplicationConfig, ApplicationState};
 use std::time::Duration;
 use tracing_log_error::log_error;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Load environment variables from a .env file, if it exists.
+    let _ = dotenvy::dotenv();  
+    
     let subscriber = get_subscriber("pavex_files".into(), "info".into(), std::io::stdout);
     init_telemetry(subscriber)?;
 
@@ -24,11 +28,8 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn _main() -> anyhow::Result<()> {
-    // Load environment variables from a .env file, if it exists.
-    let _ = dotenvy::dotenv();
-
-    let config = Config::load(None)?;
-    let application_state = build_application_state(config.app).await;
+    let config: ApplicationConfig = ConfigLoader::<Profile>::new().load()?;
+    
     let tcp_listener = config
         .server
         .listener()
@@ -38,12 +39,14 @@ async fn _main() -> anyhow::Result<()> {
         .local_addr()
         .context("The server TCP listener doesn't have a local socket address")?;
     let server_builder = Server::new().listen(tcp_listener);
+    let shutdown_timeout = config.server.graceful_shutdown_timeout;
+    let application_state = ApplicationState::new(config).await;
 
     tracing::info!("Starting to listen for incoming requests at {}", address);
-    let server_handle = run(server_builder, application_state);
+    let server_handle = run(server_builder, application_state?);
     graceful_shutdown(
         server_handle.clone(),
-        config.server.graceful_shutdown_timeout,
+        shutdown_timeout,
     )
     .await;
     server_handle.await;

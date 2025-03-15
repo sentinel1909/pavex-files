@@ -1,6 +1,7 @@
+use pavex::config::ConfigLoader;
 use pavex::server::Server;
-use server::configuration::{ApplicationProfile, Config};
-use server_sdk::{build_application_state, run};
+use server::configuration::Profile;
+use server_sdk::{run, ApplicationConfig, ApplicationState};
 use std::borrow::Cow;
 use std::sync::Once;
 use tracing::subscriber::set_global_default;
@@ -15,8 +16,8 @@ impl TestApi {
     pub async fn spawn() -> Self {
         Self::init_telemetry();
         let mut config = Self::get_config();
-        config.app.static_files.dir = Cow::Owned("../public_html".to_string());
-        let application_state = build_application_state(config.app).await;
+        config.static_files.dir = Cow::Owned("../public_html".to_string());
+        
         let tcp_listener = config
             .server
             .listener()
@@ -26,20 +27,25 @@ impl TestApi {
             .local_addr()
             .expect("The server TCP listener doesn't have a local socket address");
         let server_builder = Server::new().listen(tcp_listener);
+        let api_address = format!("http://{}:{}", config.server.ip, address.port());
+        let application_state = ApplicationState::new(config).await;
 
-        tokio::spawn(async move { run(server_builder, application_state).await });
+        tokio::spawn(async move { run(server_builder, application_state.expect("Unable to build application state.")).await });
 
         TestApi {
-            api_address: format!("http://{}:{}", config.server.ip, address.port()),
+            api_address,
             api_client: reqwest::Client::new(),
         }
     }
 
     /// Load the dev configuration and tweak it to ensure that tests are
     /// properly isolated from each other.
-    fn get_config() -> Config {
-        let mut config =
-            Config::load(Some(ApplicationProfile::Dev)).expect("Failed to load test configuration");
+    fn get_config() -> ApplicationConfig {
+        
+        let mut config: ApplicationConfig = ConfigLoader::new()
+            .profile(Profile::Dev)
+            .load()
+            .expect("Failed to load test configuration.");
         // We use port `0` to get the operating system to assign us a random port.
         // This lets us run tests in parallel without running into "port X is already in use"
         // errors.

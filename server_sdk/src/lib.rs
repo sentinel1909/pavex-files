@@ -6,16 +6,34 @@ struct ServerState {
     router: Router,
     application_state: ApplicationState,
 }
-pub struct ApplicationState {
-    pub app_config: app::configuration::AppConfig,
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct ApplicationConfig {
+    pub server: app::configuration::ServerConfig,
+    pub static_files: app::configuration::StaticFilesConfig,
 }
-pub async fn build_application_state(
-    v0: app::configuration::AppConfig,
-) -> crate::ApplicationState {
-    crate::ApplicationState {
-        app_config: v0,
+pub struct ApplicationState {
+    pub static_files_config: app::configuration::StaticFilesConfig,
+}
+impl ApplicationState {
+    pub async fn new(
+        app_config: crate::ApplicationConfig,
+    ) -> Result<crate::ApplicationState, crate::ApplicationStateError> {
+        Ok(Self::_new(app_config.static_files).await)
+    }
+    async fn _new(v0: app::configuration::StaticFilesConfig) -> crate::ApplicationState {
+        crate::ApplicationState {
+            static_files_config: v0,
+        }
     }
 }
+#[deprecated(note = "Use `ApplicationState::new` instead.")]
+pub async fn build_application_state(
+    app_config: crate::ApplicationConfig,
+) -> Result<crate::ApplicationState, crate::ApplicationStateError> {
+    crate::ApplicationState::new(app_config).await
+}
+#[derive(Debug, thiserror::Error)]
+pub enum ApplicationStateError {}
 pub fn run(
     server_builder: pavex::server::Server,
     application_state: ApplicationState,
@@ -187,7 +205,7 @@ impl Router {
                             "/public_html/{filename}",
                         );
                         route_2::entrypoint(
-                                &state.app_config,
+                                &state.static_files_config,
                                 matched_route_template,
                                 &request_head,
                             )
@@ -424,7 +442,7 @@ pub mod route_1 {
 }
 pub mod route_2 {
     pub async fn entrypoint<'a, 'b>(
-        s_0: &'a app::configuration::AppConfig,
+        s_0: &'a app::configuration::StaticFilesConfig,
         s_1: pavex::request::path::MatchedPathPattern,
         s_2: &'b pavex::request::RequestHead,
     ) -> pavex::response::Response {
@@ -433,7 +451,7 @@ pub mod route_2 {
     }
     async fn stage_1<'a, 'b>(
         s_0: &'a pavex::request::RequestHead,
-        s_1: &'b app::configuration::AppConfig,
+        s_1: &'b app::configuration::StaticFilesConfig,
         s_2: pavex::request::path::MatchedPathPattern,
     ) -> pavex::response::Response {
         let response = wrapping_1(s_1, s_2, s_0).await;
@@ -442,14 +460,14 @@ pub mod route_2 {
     async fn stage_2<'a, 'b, 'c>(
         s_0: &'a pavex_tracing::RootSpan,
         s_1: &'b pavex::request::RequestHead,
-        s_2: &'c app::configuration::AppConfig,
+        s_2: &'c app::configuration::StaticFilesConfig,
     ) -> pavex::response::Response {
         let response = handler(s_1, s_0, s_2).await;
         let response = post_processing_0(response, s_0).await;
         response
     }
     async fn wrapping_0(
-        v0: &app::configuration::AppConfig,
+        v0: &app::configuration::StaticFilesConfig,
         v1: pavex::request::path::MatchedPathPattern,
         v2: &pavex::request::RequestHead,
     ) -> pavex::response::Response {
@@ -464,7 +482,7 @@ pub mod route_2 {
         <pavex::response::Response as pavex::response::IntoResponse>::into_response(v5)
     }
     async fn wrapping_1(
-        v0: &app::configuration::AppConfig,
+        v0: &app::configuration::StaticFilesConfig,
         v1: pavex::request::path::MatchedPathPattern,
         v2: &pavex::request::RequestHead,
     ) -> pavex::response::Response {
@@ -484,7 +502,7 @@ pub mod route_2 {
     async fn handler(
         v0: &pavex::request::RequestHead,
         v1: &pavex_tracing::RootSpan,
-        v2: &app::configuration::AppConfig,
+        v2: &app::configuration::StaticFilesConfig,
     ) -> pavex::response::Response {
         let v3 = app::serve_file::ServeFile::new(v2, v0).await;
         let v4 = match v3 {
@@ -515,11 +533,11 @@ pub mod route_2 {
         T: std::future::Future<Output = pavex::response::Response>,
     {
         s_0: &'a pavex::request::RequestHead,
-        s_1: &'b app::configuration::AppConfig,
+        s_1: &'b app::configuration::StaticFilesConfig,
         s_2: pavex::request::path::MatchedPathPattern,
         next: fn(
             &'a pavex::request::RequestHead,
-            &'b app::configuration::AppConfig,
+            &'b app::configuration::StaticFilesConfig,
             pavex::request::path::MatchedPathPattern,
         ) -> T,
     }
@@ -539,11 +557,11 @@ pub mod route_2 {
     {
         s_0: &'a pavex_tracing::RootSpan,
         s_1: &'b pavex::request::RequestHead,
-        s_2: &'c app::configuration::AppConfig,
+        s_2: &'c app::configuration::StaticFilesConfig,
         next: fn(
             &'a pavex_tracing::RootSpan,
             &'b pavex::request::RequestHead,
-            &'c app::configuration::AppConfig,
+            &'c app::configuration::StaticFilesConfig,
         ) -> T,
     }
     impl<'a, 'b, 'c, T> std::future::IntoFuture for Next1<'a, 'b, 'c, T>

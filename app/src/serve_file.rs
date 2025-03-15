@@ -1,7 +1,7 @@
 // app/arc/static_files.rs
 
 // dependencies
-use crate::configuration::AppConfig;
+use crate::configuration::StaticFilesConfig;
 use mime_guess::from_path;
 use pavex::http::HeaderValue;
 use pavex::request::RequestHead;
@@ -19,8 +19,8 @@ pub struct ServeFile {
 
 // methods for the ServeFile type
 impl ServeFile {
-    pub async fn new(config: &AppConfig, request_head: &RequestHead) -> Result<Self, Error> {
-        let serve_file_subdir = Path::new(config.static_files.dir.as_ref());
+    pub async fn new(config: &StaticFilesConfig, request_head: &RequestHead) -> Result<Self, Error> {
+        let serve_file_subdir = Path::new(config.dir.as_ref());
 
         let request_target = request_head.target.path().trim_start_matches('/');
 
